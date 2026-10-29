@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Taller interactivo: cuatro casos con informe de ecocardiograma y cinco preguntas guiadas para leerlo en hipertensión pulmonar.">
+<style>
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>Lectura guiada del eco en HP</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: UI chrome in navy; the report is a white "printout" pinned left, the guided questions scroll right. */
+:root{
+  --bg:#E9EDF2; --paper:#FFFFFF; --panel:#F6F7F9; --ink:#273670; --body:#2F3E4F; --muted:#66758A;
+  --line:#D5DCE4; --navy:#273670; --navy-2:#3E538A; --gold:#C87534; --gold-soft:#F8E8D8; --teal:#3E9289;
+  --ok:#2F7D4F; --ok-soft:#E3F1E7; --bad:#A33A3A; --bad-soft:#F6E3E3; --on-navy:#F5F2EB; --on-navy-muted:#B9C6D3;
+  --font-ui:'IBM Plex Sans',system-ui,Arial,sans-serif; --font-head:'Space Grotesk','IBM Plex Sans',Arial,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  --base:16px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0A1A2B; --paper:#112941; --panel:#0E2236; --ink:#EEF2F6; --body:#C9D4DF; --muted:#8FA1B3; --line:#294661;
+  --navy:#1B2A57; --navy-2:#2E4480; --gold:#E89A5C; --gold-soft:#3F2E1E; --teal:#6CC2B4; --ok:#6CC08B; --ok-soft:#163626; --bad:#E08484; --bad-soft:#3E1C1C; --on-navy:#F5F2EB; --on-navy-muted:#B9C6D3; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A1A2B; --paper:#112941; --panel:#0E2236; --ink:#EEF2F6; --body:#C9D4DF; --muted:#8FA1B3; --line:#294661;
+  --navy:#1B2A57; --navy-2:#2E4480; --gold:#E89A5C; --gold-soft:#3F2E1E; --teal:#6CC2B4; --ok:#6CC08B; --ok-soft:#163626; --bad:#E08484; --bad-soft:#3E1C1C; --on-navy:#F5F2EB; --on-navy-muted:#B9C6D3; color-scheme:dark}
+html{font-size:var(--base)}
+html.big{--base:20px}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--body);font-family:var(--font-ui);margin:0;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--navy)}
+button{font:inherit;cursor:pointer}
+h1,h2,h3{font-family:var(--font-head);color:var(--ink);margin:0;text-wrap:balance;line-height:1.15}
+.hdr{background:var(--navy);color:var(--on-navy);position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.hdr-in{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:.75rem;display:flex;flex-wrap:wrap;gap:.75rem 1.25rem;align-items:center}
+.logo{height:2.6rem;width:auto;max-width:40vw;flex:none}
+.brand{display:flex;flex-direction:column;gap:.1rem;min-width:0;padding-left:.9rem;border-left:1px solid rgba(255,255,255,.25)}
+.brand .eyebrow{font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:600}
+.brand h1{color:var(--on-navy);font-size:1.15rem;font-weight:700}
+.cases{display:flex;gap:.4rem;flex-wrap:wrap;flex:1}
+.case-btn{border:1px solid rgba(255,255,255,.22);background:transparent;color:var(--on-navy);border-radius:999px;padding:.35rem .85rem;font-size:.85rem;font-weight:500}
+.case-btn[aria-pressed="true"]{background:var(--gold);border-color:var(--gold);color:#FFFFFF;font-weight:600}
+.tools{display:flex;gap:.4rem;flex-wrap:wrap}
+.tool{border:1px solid rgba(255,255,255,.22);background:transparent;color:var(--on-navy-muted);border-radius:8px;padding:.35rem .7rem;font-size:.8rem}
+.tool[aria-pressed="true"]{background:var(--navy-2);color:var(--on-navy);border-color:var(--on-navy-muted)}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:1.25rem 3rem;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:1.25rem;max-width:1600px;margin:0 auto}
+@media (max-width:980px){.wrap{grid-template-columns:1fr}.report-col{position:static!important;max-height:none!important}}
+.report-col{position:sticky;top:calc(4.6rem + env(safe-area-inset-top,0px));align-self:start;max-height:calc(100vh - 5.6rem - env(safe-area-inset-top,0px));overflow:auto;min-width:0}
+/* The report: a lab printout */
+.report{background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:1.25rem 1.4rem 1.5rem;font-size:.84rem;position:relative;min-width:0}
+.report .stamp{position:absolute;right:1rem;top:.9rem;border:1.5px solid var(--bad);color:var(--bad);font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;padding:.15rem .5rem;transform:rotate(-4deg);font-weight:600;background:var(--paper)}
+.report-head{border-bottom:2px solid var(--ink);padding-bottom:.6rem;margin-bottom:.8rem}
+.report-head .lab{font-family:var(--font-head);font-weight:700;font-size:1rem;letter-spacing:.02em}
+.report-head .sub{font-size:.75rem;color:var(--muted)}
+.idgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.25rem .9rem;font-size:.78rem;margin-bottom:.9rem}
+.idgrid div span{color:var(--muted)}
+.rsec{margin-top:.9rem}
+.rsec h3{font-family:var(--font-ui);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:.2rem;margin-bottom:.3rem}
+.rt{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.rt td{padding:.22rem .35rem;border-bottom:1px dotted var(--line);vertical-align:top}
+.rt td.v{font-family:var(--font-mono);white-space:nowrap;font-weight:500}
+.rt td.ref{color:var(--muted);font-size:.74rem;white-space:nowrap}
+.rt td.prev{font-family:var(--font-mono);color:var(--muted);white-space:nowrap}
+.rt tr.hl td{background:var(--gold-soft);box-shadow:inset 3px 0 0 var(--gold)}
+.rt tr.hl td:first-child{font-weight:600}
+.rt .colh td{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line)}
+.concl{margin-top:1rem;border:1px solid var(--ink);padding:.7rem .9rem;border-radius:4px}
+.concl h3{font-family:var(--font-ui);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:.3rem}
+.concl p{margin:0;font-size:.86rem;line-height:1.5}
+.concl.hl{background:var(--gold-soft);border-color:var(--gold)}
+.sign{margin-top:.8rem;font-size:.74rem;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:.3rem}
+/* Right column */
+.steps-col{min-width:0;display:flex;flex-direction:column;gap:1rem}
+.vignette{background:var(--navy-2);color:var(--on-navy);border-radius:10px;padding:1.1rem 1.25rem;display:flex;flex-direction:column;gap:.4rem}
+.vignette .eyebrow{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:600}
+.vignette h2{color:var(--on-navy);font-size:1.35rem}
+.vignette p{margin:0;color:var(--on-navy-muted);font-size:.95rem}
+.stepnav{display:flex;gap:.35rem;flex-wrap:wrap;align-items:center}
+.stepnav button{border:1px solid var(--line);background:var(--panel);color:var(--body);border-radius:999px;padding:.3rem .75rem;font-size:.8rem;font-weight:500;display:flex;gap:.4rem;align-items:center}
+.stepnav button[aria-current="step"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.stepnav button.done::before{content:"";width:.5rem;height:.5rem;border-radius:50%;background:var(--ok);display:inline-block}
+.stepnav button.done.wrong::before{background:var(--bad)}
+.progress{height:4px;background:var(--line);border-radius:2px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--gold);transition:width .3s}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:1.25rem 1.4rem;display:flex;flex-direction:column;gap:.9rem;min-width:0}
+.card .eyebrow{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:600;display:flex;gap:.6rem;align-items:baseline}
+.card .eyebrow b{font-family:var(--font-head);font-size:1.6rem;color:var(--ink);letter-spacing:0}
+.card h2{font-size:1.35rem}
+.card .lead{margin:0;font-size:1rem;color:var(--body);max-width:65ch}
+.opts{display:flex;flex-direction:column;gap:.5rem}
+.opt{text-align:left;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:.7rem .9rem;display:flex;gap:.8rem;align-items:flex-start;line-height:1.4;font-size:.95rem}
+.opt .k{font-family:var(--font-head);font-weight:700;color:var(--muted);min-width:1.2rem}
+.opt:hover:not(:disabled){border-color:var(--gold)}
+.opt:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.opt:disabled{cursor:default;opacity:.75}
+.opt.correct{border-color:var(--ok);background:var(--ok-soft);opacity:1}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft);opacity:1}
+.opt.reveal{border-style:dashed;border-color:var(--ok);opacity:1}
+.fb{border-radius:8px;padding:.9rem 1rem;display:flex;flex-direction:column;gap:.45rem;font-size:.95rem}
+.fb.ok{background:var(--ok-soft);border-left:4px solid var(--ok)}
+.fb.bad{background:var(--bad-soft);border-left:4px solid var(--bad)}
+.fb .verdict{font-weight:600;color:var(--ink)}
+.fb p{margin:0}
+.where{display:flex;gap:.5rem;align-items:flex-start;font-size:.85rem;color:var(--muted)}
+.where .tag{background:var(--gold-soft);color:var(--ink);border-radius:4px;padding:.05rem .4rem;font-size:.75rem;font-weight:600;white-space:nowrap;border-left:3px solid var(--gold)}
+.pearl{border:1px solid var(--line);border-radius:8px;padding:.8rem 1rem;font-size:.9rem;background:var(--panel)}
+.pearl b{color:var(--ink)}
+.facil{border:1px dashed var(--teal);border-radius:8px;padding:.8rem 1rem;font-size:.88rem;color:var(--body)}
+.facil .lbl{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);font-weight:600;margin-bottom:.25rem}
+.actions{display:flex;gap:.6rem;flex-wrap:wrap;justify-content:space-between;align-items:center}
+.btn{border:none;background:var(--ink);color:var(--paper);border-radius:8px;padding:.6rem 1.1rem;font-weight:600;font-size:.95rem}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.6rem}
+.sum .tile{border:1px solid var(--line);border-radius:8px;padding:.7rem .85rem;background:var(--panel);display:flex;flex-direction:column;gap:.2rem;min-width:0}
+.sum .tile .l{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.sum .tile .v{font-weight:600;color:var(--ink);font-size:.95rem}
+.missing{border-left:4px solid var(--bad);background:var(--bad-soft);border-radius:8px;padding:.8rem 1rem}
+.missing h3{font-size:.95rem;margin-bottom:.3rem}
+.missing ul{margin:0;padding-left:1.1rem;font-size:.9rem}
+.score{font-family:var(--font-head);font-size:1.4rem;color:var(--ink);font-weight:700}
+.note{font-size:.78rem;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+</head>
+<body>
+<header class="hdr">
+  <div class="hdr-in">
+    <img class="logo" src="data:image/png;base64,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" alt="Instituto Neumológico del Oriente" width="480" height="139">
+    <div class="brand">
+      <span class="eyebrow">Taller interactivo · Casos</span>
+      <h1>Lectura guiada del eco en hipertensión pulmonar</h1>
+    </div>
+    <nav class="cases" id="caseNav" aria-label="Casos"></nav>
+    <div class="tools">
+      <button class="tool" id="facilBtn" aria-pressed="false" title="Muestra respuestas y notas para quien dirige el taller">Modo facilitador</button>
+      <button class="tool" id="bigBtn" aria-pressed="false" title="Letra grande para proyector">Proyector</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="report-col" aria-label="Informe de ecocardiograma">
+    <div class="report" id="report"></div>
+  </section>
+  <section class="steps-col" aria-label="Preguntas guiadas">
+    <div class="vignette" id="vignette"></div>
+    <div class="progress"><i id="prog" style="width:0%"></i></div>
+    <nav class="stepnav" id="stepNav" aria-label="Pasos"></nav>
+    <div class="card" id="stepCard"></div>
+  </section>
+</main>
+
+<script>
+/* ===== Datos de los casos (ficticios, con fines docentes) ===== */
+const CASES = [
+{
+ id:'c1', chip:'1 · Sospecha', title:'Mujer de 54 años con esclerodermia y disnea progresiva',
+ vignette:'Remitida por reumatología. Esclerosis sistémica limitada de 9 años, disnea de esfuerzo de 8 meses, hoy clase funcional III. Sin ortopnea. Saturación 94 % en reposo. Trae este informe de un laboratorio externo.',
+ pt:{ini:'M.R.T.', edad:'54 años', sexo:'Femenino', sc:'1,62 m²', fecha:'Hace 3 semanas', remite:'Reumatología', ind:'Esclerosis sistémica. Disnea. Descartar hipertensión pulmonar.', ritmo:'Sinusal, 88 lpm', pa:'118/72 mmHg', ventana:'Adecuada'},
+ prevLabel:null,
+ rows:[
+  {sec:'Ventrículo izquierdo', items:[
+   {k:'ddvi',l:'Diámetro diastólico VI',v:'38 mm',ref:'38–52'},
+   {k:'siv',l:'Septo interventricular',v:'9 mm',ref:'6–10'},
+   {k:'fevi',l:'FEVI (Simpson biplano)',v:'62 %',ref:'≥ 54'},
+   {k:'ie',l:'Índice de excentricidad VI',v:'1,4 sístole · 1,3 diástole',ref:'≤ 1,1'}]},
+  {sec:'Función diastólica y aurícula izquierda', items:[
+   {k:'ea',l:'E / A',v:'0,7',ref:'0,8–2,0'},
+   {k:'ee',l:'E / e’ promedio',v:'8',ref:'< 14'},
+   {k:'ai',l:'Volumen AI indexado',v:'28 mL/m²',ref:'≤ 34'}]},
+  {sec:'Válvulas', items:[
+   {k:'vm',l:'Mitral',v:'Insuficiencia trivial',ref:''},
+   {k:'va',l:'Aórtica',v:'Trivalva, normal',ref:''},
+   {k:'vt',l:'Tricúspide',v:'Insuficiencia moderada, chorro central',ref:''},
+   {k:'vp',l:'Pulmonar',v:'Insuficiencia leve',ref:''}]},
+  {sec:'Cavidades derechas', items:[
+   {k:'vdb',l:'Diámetro basal VD',v:'46 mm',ref:'≤ 41'},
+   {k:'vdvi',l:'Relación VD / VI basal',v:'1,2',ref:'< 1,0'},
+   {k:'plvd',l:'Pared libre VD',v:'7 mm',ref:'≤ 5'},
+   {k:'tapse',l:'TAPSE',v:'15 mm',ref:'≥ 17'},
+   {k:'sp',l:'S’ anillo tricúspide',v:'8 cm/s',ref:'≥ 9,5'},
+   {k:'fac',l:'FAC del VD',v:'30 %',ref:'≥ 35'},
+   {k:'strain',l:'Strain pared libre VD',v:'No realizado',ref:'< −20 %'},
+   {k:'ad',l:'Área AD telesistólica',v:'24 cm²',ref:'≤ 18'}]},
+  {sec:'Hemodinámica Doppler', items:[
+   {k:'trv',l:'Velocidad máx. insuficiencia tricuspídea',v:'3,6 m/s',ref:'≤ 2,8'},
+   {k:'grad',l:'Gradiente VD–AD',v:'52 mmHg',ref:''},
+   {k:'vci',l:'VCI diámetro / colapso',v:'24 mm · < 50 %',ref:'≤ 21 · > 50 %'},
+   {k:'pad',l:'PAD estimada',v:'15 mmHg',ref:'3'},
+   {k:'psap',l:'PSAP estimada',v:'67 mmHg',ref:'< 36'},
+   {k:'ip',l:'Vel. protodiastólica insuf. pulmonar',v:'2,6 m/s',ref:'≤ 2,2'},
+   {k:'papm',l:'PAP media estimada (IP)',v:'42 mmHg',ref:''},
+   {k:'ta',l:'Tiempo de aceleración TSVD',v:'80 ms, muesca mesosistólica',ref:'≥ 105'},
+   {k:'ap',l:'Diámetro tronco pulmonar',v:'30 mm',ref:'≤ 25'}]},
+  {sec:'Pericardio', items:[
+   {k:'peri',l:'Derrame pericárdico',v:'Mínimo, posterior',ref:'Ausente'}]}
+ ],
+ conclusion:'Hipertensión pulmonar severa (PSAP 67 mmHg). Dilatación e hipertrofia del ventrículo derecho con disfunción sistólica moderada. Dilatación de aurícula derecha. Insuficiencia tricuspídea moderada. Función sistólica del VI conservada. Derrame pericárdico mínimo.',
+ steps:[
+  {n:1,q:'¿Hay presión alta?',title:'¿De dónde sale la PSAP de 67 mmHg del informe?',keys:['trv','grad','vci','pad','psap'],
+   opts:['De la velocidad de la IT: 4 × 3,6² = 52 mmHg','Del gradiente VD–AD (52) más la PAD por la cava dilatada sin colapso (15)','Del gradiente VD–AD (52) más una PAD estándar de 8 mmHg','No se puede calcular: la IT es moderada y sobreestima'],
+   ans:1,
+   why:'PSAP = 4 × VIT² + PAD. La VCI de 24 mm con colapso menor del 50 % asigna 15 mmHg; por eso 52 + 15 = 67. Con una cava normal la misma velocidad habría dado 55 mmHg: la PAD es el eslabón más débil del cálculo.',
+   pearl:'La guía ESC/ERS 2022 pide razonar con la <b>velocidad de la IT (3,6 m/s)</b>, que no depende de la cava, y usar la PSAP como dato de apoyo.',
+   facil:'Haga la cuenta en voz alta y pregunte qué pasaría si la cava midiera 18 mm con colapso completo (PSAP 55). Una IT moderada central no invalida la velocidad; solo la IT masiva laminar la subestima.'},
+  {n:2,q:'¿Qué probabilidad?',title:'¿Qué probabilidad ecocardiográfica de HP tiene esta paciente?',keys:['trv','vdvi','ie','ta','ap','vci','ad','ip'],
+   opts:['Intermedia: la IT es moderada y puede sobreestimar','Alta: velocidad de IT > 3,4 m/s, con signos en las tres categorías','No se puede asignar sin cateterismo','Baja: la FEVI es normal y no hay valvulopatía izquierda'],
+   ans:1,
+   why:'Con VIT > 3,4 m/s la probabilidad ya es alta sin necesidad de signos adicionales. Aquí además hay signos A (VD/VI 1,2, septo aplanado), B (TA 80 ms con muesca, IP 2,6 m/s, AP 30 mm) y C (VCI dilatada, AD 24 cm²).',
+   pearl:'El informe dice «HP severa», pero <b>severa es una categoría hemodinámica</b> que el eco no puede dar. Lo correcto es «probabilidad ecocardiográfica alta».',
+   facil:'Pida que ubiquen un signo de cada categoría en el informe antes de mostrar la respuesta. Señale que el laboratorio no escribió la palabra «probabilidad»: ese es el primer vacío del informe.'},
+  {n:3,q:'¿Cómo está el VD?',title:'¿Cuál frase describe mejor al ventrículo derecho?',keys:['vdb','plvd','tapse','sp','fac','ad','psap','peri'],
+   opts:['Normal: la FEVI es 62 % y la función global está conservada','Disfunción del VD con acoplamiento VD–AP conservado','Disfunción del VD con TAPSE/PSAP de 0,22 mm/mmHg, en rango de riesgo intermedio','Disfunción del VD con desacoplamiento severo (TAPSE/PSAP < 0,19)'],
+   ans:2,
+   why:'TAPSE 15, S’ 8 y FAC 30 % son tres medidas concordantes de disfunción. El cociente 15/67 = 0,22 cae en 0,19–0,32, riesgo intermedio. La pared libre de 7 mm indica sobrecarga crónica, no aguda.',
+   pearl:'La FEVI no dice nada del VD. En HP, <b>el pronóstico está en el ventrículo derecho</b>: TAPSE/PSAP, área de AD y derrame pericárdico.',
+   facil:'Muestre en el informe que el laboratorio sí midió TAPSE y PSAP pero no los dividió. El cociente lo calcula el lector.'},
+  {n:4,q:'¿De dónde viene?',title:'¿Qué perfil hemodinámico sugiere el informe?',keys:['ai','ee','ea','siv','vm','ta','ie'],
+   opts:['Poscapilar (grupo 2): hay insuficiencia tricuspídea y dilatación auricular','Precapilar: AI normal, E/e’ 8, E/A 0,7, septo aplanado en sístole y muesca en el TSVD','Mixto: no es posible orientar sin cateterismo','Por cortocircuito: la dilatación del VD con AI normal lo sugiere'],
+   ans:1,
+   why:'Todo el lado izquierdo es normal: AI 28 mL/m², E/e’ 8, septo 9 mm, mitral trivial. La muesca mesosistólica del TSVD y el septo aplanado en sístole son marcadores de resistencia pulmonar alta. En esclerodermia, el grupo 1 es la primera sospecha, sin olvidar enfermedad intersticial (grupo 3).',
+   pearl:'Un E/A de 0,7 con AI normal no es disfunción diastólica del VI: es <b>llenado izquierdo comprometido por un VD que empuja el septo</b>.',
+   facil:'Pregunte por qué no se puede descartar un cortocircuito con este informe (no describe septos con color ni ventana suprasternal). Es un vacío menor pero real.'},
+  {n:5,q:'¿Cómo va? / Conducta',title:'¿Cuál es la conducta con este informe en la mano?',keys:['psap','trv','tapse','ad','peri'],
+   opts:['Iniciar sildenafil: la probabilidad es alta y hay disfunción del VD','Remitir a centro de HP para completar estudio (gammagrafía V/Q, TAC, pruebas de función pulmonar) y cateterismo derecho','Repetir el eco en 6 meses y decidir según la tendencia de la PSAP','Diurético, oxígeno y control por reumatología'],
+   ans:1,
+   why:'Probabilidad alta en paciente con enfermedad asociada obliga a confirmar con cateterismo derecho antes de cualquier terapia específica. La terapia dirigida sin hemodinamia es un error, aunque el eco sea muy sugestivo.',
+   pearl:'Este eco pasa a ser el <b>eco basal</b>. En el seguimiento se compararán TAPSE, TAPSE/PSAP, área de AD y derrame, no solo la PSAP.',
+   facil:'Si hay tiempo, cambie un dato: TAPSE 22 mm en lugar de 15. Pregunte qué cambia (acoplamiento 0,33, riesgo bajo por eco) y qué no cambia (sigue yendo a cateterismo).'}
+ ],
+ summary:{prob:'Alta',vd:'Disfunción · TAPSE/PSAP 0,22',origen:'Precapilar probable',conducta:'Centro de HP → cateterismo derecho'},
+ missing:['No asigna probabilidad ecocardiográfica; usa «severa», categoría que el eco no puede dar.','No calcula el cociente TAPSE/PSAP.','No describe búsqueda de cortocircuitos (color en septos, suprasternal).','No reporta strain de pared libre del VD.']
+},
+{
+ id:'c2', chip:'2 · Seguimiento', title:'Hombre de 38 años con HAP idiopática en tratamiento, control anual',
+ vignette:'Diagnóstico por cateterismo hace 2 años (PAPm 54 mmHg, RVP 11 UW, PCP 9). Recibe ambrisentán y tadalafilo. Dice sentirse «igual», aunque su esposa nota que camina menos. Clase funcional III. Trae el eco de control con el estudio del año anterior como referencia.',
+ pt:{ini:'C.A.P.', edad:'38 años', sexo:'Masculino', sc:'1,90 m²', fecha:'Hace 1 semana', remite:'Programa de HP', ind:'HAP idiopática. Control anual. Comparar con estudio previo.', ritmo:'Sinusal, 96 lpm', pa:'102/66 mmHg', ventana:'Adecuada'},
+ prevLabel:'Previo (12 meses)',
+ rows:[
+  {sec:'Ventrículo izquierdo', items:[
+   {k:'ddvi',l:'Diámetro diastólico VI',v:'36 mm',p:'40 mm',ref:'42–58'},
+   {k:'fevi',l:'FEVI (Simpson biplano)',v:'64 %',p:'62 %',ref:'≥ 52'},
+   {k:'ie',l:'Índice de excentricidad VI',v:'1,7 sístole · 1,5 diástole',p:'1,4 · 1,2',ref:'≤ 1,1'}]},
+  {sec:'Función diastólica y aurícula izquierda', items:[
+   {k:'ee',l:'E / e’ promedio',v:'7',p:'7',ref:'< 14'},
+   {k:'ai',l:'Volumen AI indexado',v:'24 mL/m²',p:'26 mL/m²',ref:'≤ 34'}]},
+  {sec:'Válvulas', items:[
+   {k:'vt',l:'Tricúspide',v:'Insuficiencia severa, anillo 44 mm',p:'Moderada',ref:''},
+   {k:'vp',l:'Pulmonar',v:'Insuficiencia leve-moderada',p:'Leve',ref:''}]},
+  {sec:'Cavidades derechas', items:[
+   {k:'vdb',l:'Diámetro basal VD',v:'52 mm',p:'47 mm',ref:'≤ 41'},
+   {k:'tapse',l:'TAPSE',v:'13 mm',p:'20 mm',ref:'≥ 17'},
+   {k:'sp',l:'S’ anillo tricúspide',v:'7 cm/s',p:'11 cm/s',ref:'≥ 9,5'},
+   {k:'fac',l:'FAC del VD',v:'26 %',p:'38 %',ref:'≥ 35'},
+   {k:'strain',l:'Strain pared libre VD',v:'−12 %',p:'−19 %',ref:'< −20 %'},
+   {k:'ad',l:'Área AD telesistólica',v:'27 cm²',p:'20 cm²',ref:'≤ 18'}]},
+  {sec:'Hemodinámica Doppler', items:[
+   {k:'trv',l:'Velocidad máx. insuficiencia tricuspídea',v:'3,7 m/s',p:'4,3 m/s',ref:'≤ 2,8'},
+   {k:'grad',l:'Gradiente VD–AD',v:'55 mmHg',p:'74 mmHg',ref:''},
+   {k:'vci',l:'VCI diámetro / colapso',v:'25 mm · sin colapso',p:'21 mm · > 50 %',ref:'≤ 21 · > 50 %'},
+   {k:'pad',l:'PAD estimada',v:'15 mmHg',p:'8 mmHg',ref:'3'},
+   {k:'psap',l:'PSAP estimada',v:'70 mmHg',p:'82 mmHg',ref:'< 36'},
+   {k:'ip',l:'Vel. protodiastólica insuf. pulmonar',v:'2,9 m/s',p:'3,0 m/s',ref:'≤ 2,2'},
+   {k:'papm',l:'PAP media estimada (IP)',v:'49 mmHg',p:'44 mmHg',ref:''},
+   {k:'ta',l:'Tiempo de aceleración TSVD',v:'62 ms, muesca mesosistólica',p:'70 ms, muesca',ref:'≥ 105'}]},
+  {sec:'Pericardio', items:[
+   {k:'peri',l:'Derrame pericárdico',v:'Moderado, circunferencial (14 mm)',p:'Ausente',ref:'Ausente'}]}
+ ],
+ conclusion:'Disminución de la presión sistólica pulmonar estimada respecto al estudio previo (82 → 70 mmHg). Dilatación de cavidades derechas con disfunción sistólica del VD. Insuficiencia tricuspídea severa funcional. Derrame pericárdico moderado sin signos de taponamiento. FEVI conservada.',
+ steps:[
+  {n:1,q:'¿Hay presión alta?',title:'La PSAP bajó de 82 a 70 mmHg. ¿Qué concluye de ese dato aislado?',keys:['trv','grad','vci','pad','psap','vt','papm'],
+   opts:['Mejoría hemodinámica: el tratamiento está funcionando','Nada todavía: una PSAP que baja puede ser un VD que ya no genera presión, y la IT ahora es severa','Empeoramiento: la PAD subió de 8 a 15','El cambio está dentro del error del método y no significa nada'],
+   ans:1,
+   why:'La PSAP depende de cuánto empuja el VD. Si el VD falla, la velocidad de la IT cae aunque la resistencia pulmonar siga alta. Además la IT pasó a severa (flujo más laminar, subestima) y la PAP media estimada por la IP subió de 44 a 49. El dato aislado no se puede interpretar.',
+   pearl:'En seguimiento <b>nunca lea la PSAP sola</b>. Léala junto a TAPSE, área de AD y derrame, y en lo posible divida TAPSE/PSAP.',
+   facil:'Este es el caso que más cambia conductas. Deje que alguien defienda la opción A y luego muestre la fila de TAPSE. Señale la discordancia PSAP ↓ con PAPm (IP) ↑: dos estimaciones que van en sentidos opuestos obligan a desconfiar de ambas.'},
+  {n:2,q:'¿Qué signos de progresión?',title:'¿Qué signos nuevos de sobrecarga de presión aparecen frente al previo?',keys:['ie','vdb','ad','peri','vci','ta','strain'],
+   opts:['Ninguno relevante: los signos eran los mismos hace un año','Septo más aplanado, VD y AD más grandes, VCI sin colapso, derrame moderado nuevo y strain que cae de −19 a −12 %','Solo el derrame pericárdico, que puede ser inflamatorio','Solo la insuficiencia tricuspídea, que es un hallazgo mecánico'],
+   ans:1,
+   why:'Todos los signos de las categorías A y C empeoraron. El derrame pericárdico en HP es por presión auricular derecha alta, no por inflamación, y su aparición es de mal pronóstico. El strain de pared libre es el parámetro más sensible y cayó 7 puntos.',
+   pearl:'La columna «previo» es la herramienta de lectura más valiosa del informe de seguimiento. <b>Pídala siempre</b> en la misma hoja.',
+   facil:'Resalte que el laboratorio sí incluyó la columna previa (buena práctica) pero la conclusión solo comparó la PSAP.'},
+  {n:3,q:'¿Cómo está el VD?',title:'Calcule TAPSE/PSAP actual y previo. ¿Qué estrato de riesgo indica?',keys:['tapse','psap','sp','fac','strain','ad','peri'],
+   opts:['0,24 → 0,19: pasó de riesgo intermedio a riesgo alto por desacoplamiento','0,24 → 0,27: mejoró el acoplamiento porque bajó la poscarga','No se puede calcular porque la IT es severa','0,19 en ambos: sin cambio'],
+   ans:0,
+   why:'Previo 20/82 = 0,24 (intermedio). Actual 13/70 = 0,19 (límite de riesgo alto). Súmele área de AD > 26 cm² y derrame moderado: los tres parámetros eco de la tabla de riesgo ESC/ERS 2022 están en el estrato alto.',
+   pearl:'<b>Tres parámetros eco de riesgo alto</b>: área de AD > 26 cm², TAPSE/PSAP < 0,19 y derrame moderado o grande. Este paciente tiene los tres.',
+   facil:'Con IT severa la PSAP puede estar subestimada; eso haría el cociente aún más bajo, no más alto. El sesgo va en contra del paciente, lo que refuerza la conclusión.'},
+  {n:4,q:'¿De dónde viene?',title:'¿Hay que reconsiderar un componente poscapilar nuevo?',keys:['ai','ee','ddvi','fevi','vt'],
+   opts:['Sí: la IT severa y el derrame sugieren falla biventricular','No: AI 24 mL/m², E/e’ 7, VI pequeño (36 mm) y FEVI 64 %. Sigue siendo precapilar puro','Sí: el VI de 36 mm indica miocardiopatía restrictiva','No se puede saber sin resonancia'],
+   ans:1,
+   why:'El VI pequeño con llenado comprimido por el septo es consecuencia de la HP precapilar, no causa. La AI normal y el E/e’ bajo descartan presión de llenado izquierda alta. El origen no cambió; cambió la capacidad del VD para enfrentarlo.',
+   pearl:'En un paciente ya diagnosticado, la pregunta 4 se vuelve: <b>¿apareció algo nuevo del lado izquierdo?</b> Aquí no.',
+   facil:'Pregunta rápida; no se demore. Sirve para recordar que la sistemática se mantiene aunque el diagnóstico esté hecho.'},
+  {n:5,q:'¿Cómo va? / Conducta',title:'¿Cuál es la conducta en la consulta del programa?',keys:['tapse','ad','peri','psap','strain'],
+   opts:['Mantener tratamiento: la PSAP bajó y el paciente «se siente igual»','Reestratificar hoy (clase funcional, test de marcha, NT-proBNP) y, con riesgo alto por eco, escalar terapia en el centro de HP (prostanoide parenteral) con cateterismo de control y evaluación temprana para trasplante','Aumentar diurético y repetir el eco en 12 meses','Suspender ambrisentán por el derrame pericárdico'],
+   ans:1,
+   why:'El eco por sí solo coloca al paciente en riesgo alto. La decisión final integra clase funcional III, 6MWT y NT-proBNP, pero el eco ya indica que la terapia actual no logró la meta de riesgo bajo. La guía recomienda escalar a triple terapia con prostanoide parenteral y remitir a evaluación de trasplante cuando el riesgo es alto.',
+   pearl:'Objetivo del tratamiento en HAP: <b>llevar al paciente a riesgo bajo</b>. Un eco que empeora es una indicación de cambio, aunque la PSAP haya «mejorado».',
+   facil:'Cierre con la frase del deck: una PSAP que baja con un VD que cae es deterioro. Si el grupo es de atención primaria, la conducta práctica es: contacto con el programa de HP esta semana, no en el próximo control.'}
+ ],
+ summary:{prob:'Ya diagnosticada',vd:'Desacoplamiento · TAPSE/PSAP 0,19',origen:'Precapilar sin cambios',conducta:'Riesgo alto → escalar terapia en centro de HP'},
+ missing:['La conclusión compara solo la PSAP y la llama «disminución», lo que induce a leer mejoría.','No calcula TAPSE/PSAP ni lo compara con el previo.','No menciona que la IT severa puede subestimar la PSAP.','No integra los tres parámetros de riesgo (AD, TAPSE/PSAP, derrame) en una frase de estratificación.']
+},
+{
+ id:'c3', chip:'3 · «HP severa»', title:'Mujer de 72 años remitida por «hipertensión pulmonar severa» en el eco',
+ vignette:'Hipertensión arterial de 20 años, diabetes tipo 2, obesidad (IMC 34), fibrilación auricular paroxística. Disnea clase II–III y edema vespertino. Remitida al programa de HP «para iniciar tratamiento». Trae este informe.',
+ pt:{ini:'L.E.G.', edad:'72 años', sexo:'Femenino', sc:'1,88 m²', fecha:'Hace 2 semanas', remite:'Medicina interna', ind:'Disnea. Edema. Evaluar hipertensión pulmonar.', ritmo:'Sinusal, 74 lpm (FA paroxística conocida)', pa:'148/86 mmHg', ventana:'Regular (obesidad)'},
+ prevLabel:null,
+ rows:[
+  {sec:'Ventrículo izquierdo', items:[
+   {k:'ddvi',l:'Diámetro diastólico VI',v:'47 mm',ref:'38–52'},
+   {k:'siv',l:'Septo interventricular',v:'13 mm',ref:'6–10'},
+   {k:'pp',l:'Pared posterior',v:'12 mm',ref:'6–10'},
+   {k:'masa',l:'Masa VI indexada',v:'112 g/m²',ref:'≤ 95'},
+   {k:'fevi',l:'FEVI (Simpson biplano)',v:'58 %',ref:'≥ 54'},
+   {k:'ie',l:'Índice de excentricidad VI',v:'1,0',ref:'≤ 1,1'}]},
+  {sec:'Función diastólica y aurícula izquierda', items:[
+   {k:'ea',l:'E / A',v:'1,9',ref:'0,8–2,0'},
+   {k:'ee',l:'E / e’ promedio',v:'17',ref:'< 14'},
+   {k:'ai',l:'Volumen AI indexado',v:'46 mL/m²',ref:'≤ 34'},
+   {k:'dd',l:'Patrón de llenado',v:'Disfunción diastólica grado II',ref:''}]},
+  {sec:'Válvulas', items:[
+   {k:'vm',l:'Mitral',v:'Insuficiencia leve a moderada, anillo calcificado',ref:''},
+   {k:'va',l:'Aórtica',v:'Esclerosis sin estenosis',ref:''},
+   {k:'vt',l:'Tricúspide',v:'Insuficiencia leve a moderada',ref:''}]},
+  {sec:'Cavidades derechas', items:[
+   {k:'vdb',l:'Diámetro basal VD',v:'40 mm',ref:'≤ 41'},
+   {k:'vdvi',l:'Relación VD / VI basal',v:'0,85',ref:'< 1,0'},
+   {k:'plvd',l:'Pared libre VD',v:'5 mm',ref:'≤ 5'},
+   {k:'tapse',l:'TAPSE',v:'19 mm',ref:'≥ 17'},
+   {k:'sp',l:'S’ anillo tricúspide',v:'11 cm/s',ref:'≥ 9,5'},
+   {k:'fac',l:'FAC del VD',v:'40 %',ref:'≥ 35'},
+   {k:'ad',l:'Área AD telesistólica',v:'19 cm²',ref:'≤ 18'}]},
+  {sec:'Hemodinámica Doppler', items:[
+   {k:'trv',l:'Velocidad máx. insuficiencia tricuspídea',v:'3,5 m/s',ref:'≤ 2,8'},
+   {k:'grad',l:'Gradiente VD–AD',v:'49 mmHg',ref:''},
+   {k:'vci',l:'VCI diámetro / colapso',v:'22 mm · > 50 %',ref:'≤ 21 · > 50 %'},
+   {k:'pad',l:'PAD estimada',v:'8 mmHg',ref:'3'},
+   {k:'psap',l:'PSAP estimada',v:'57 mmHg',ref:'< 36'},
+   {k:'ip',l:'Vel. protodiastólica insuf. pulmonar',v:'2,0 m/s',ref:'≤ 2,2'},
+   {k:'papm',l:'PAP media estimada (IP)',v:'24 mmHg',ref:''},
+   {k:'ta',l:'Tiempo de aceleración TSVD',v:'115 ms, sin muesca',ref:'≥ 105'},
+   {k:'ap',l:'Diámetro tronco pulmonar',v:'24 mm',ref:'≤ 25'}]},
+  {sec:'Pericardio', items:[
+   {k:'peri',l:'Derrame pericárdico',v:'Ausente',ref:'Ausente'}]}
+ ],
+ conclusion:'Hipertensión pulmonar moderada a severa (PSAP 57 mmHg). Hipertrofia concéntrica del ventrículo izquierdo con función sistólica conservada. Disfunción diastólica grado II con presiones de llenado elevadas. Dilatación biauricular. Insuficiencia mitral leve a moderada. Ventrículo derecho de tamaño y función normales.',
+ steps:[
+  {n:1,q:'¿Hay presión alta?',title:'¿Es creíble la PSAP de 57 mmHg?',keys:['trv','grad','vci','pad','psap','ventana'],
+   opts:['No: con ventana regular por obesidad la velocidad suele estar sobreestimada','Sí, es plausible: VIT 3,5 m/s bien registrada, PAD 8 por cava discordante; la presión pulmonar está alta','No: una PAP media por IP de 24 mmHg contradice la PSAP','Sí, pero debió sumarse PAD 15 porque la paciente tiene edema'],
+   ans:1,
+   why:'Una VIT de 3,5 m/s con envolvente completa es un dato sólido: la presión pulmonar sistólica está elevada. La PAD por cava de 22 mm con buen colapso es discordante y se asigna 8. El edema clínico no cambia la regla de la cava. La pregunta no es si hay presión alta, sino por qué.',
+   pearl:'La ventana regular invita a <b>desconfiar de la PSAP</b>, pero aquí la velocidad está bien registrada; el error de este caso no está en la medida sino en la interpretación.',
+   facil:'Comente que la PAP media por IP (24) y la PSAP (57) son compatibles: en HP poscapilar el gradiente diastólico transpulmonar es bajo y la PAPm puede ser solo moderadamente alta. No se contradicen.'},
+  {n:2,q:'¿Qué probabilidad?',title:'¿Qué probabilidad ecocardiográfica de HP tiene?',keys:['trv','vdvi','ie','ta','ap','vci','ad'],
+   opts:['Alta: velocidad de IT > 3,4 m/s','Intermedia: hay solo un signo adicional (AD 19 cm²)','Baja: el VD es normal y no hay muesca en el TSVD','No aplica: la paciente tiene falla cardíaca'],
+   ans:0,
+   why:'VIT 3,5 m/s > 3,4 asigna probabilidad alta por sí sola. La probabilidad alta de HP es correcta; lo que falta en el informe es responder de qué tipo de HP se trata. Note que casi no hay signos de las categorías A y B: septo redondo, TA normal sin muesca, AP normal. Eso ya insinúa resistencia pulmonar baja.',
+   pearl:'Probabilidad alta de HP <b>no es sinónimo de HP precapilar</b>. La mayoría de las HP en la población general son del grupo 2.',
+   facil:'Esta pregunta tiene «trampa» a propósito: la respuesta correcta es alta, y aun así la paciente no va a recibir vasodilatadores. Use la discusión para separar «hay HP» de «qué HP».'},
+  {n:3,q:'¿Cómo está el VD?',title:'¿Cómo describe el ventrículo derecho?',keys:['vdb','plvd','tapse','sp','fac','ad','psap','peri'],
+   opts:['Disfuncional: el área de AD está dilatada','Normal en tamaño y función, con acoplamiento conservado (TAPSE/PSAP 0,33 mm/mmHg)','Hipertrófico por sobrecarga crónica de presión','No valorable por la ventana regular'],
+   ans:1,
+   why:'TAPSE 19, S’ 11 y FAC 40 % son normales; el VD mide 40 mm con pared de 5 mm y relación VD/VI 0,85. El cociente 19/57 = 0,33 está por encima de 0,32. Un VD normal frente a una PSAP de 57 habla de una sobrecarga de presión moderada, probablemente transmitida desde la izquierda.',
+   pearl:'Un VD que tolera bien la presión sugiere <b>poscarga de origen pasivo</b> (presión de llenado izquierda), no una vasculopatía pulmonar.',
+   facil:'Pregunte: «¿Qué le pasaría al VD si esta PSAP fuera por resistencia pulmonar alta durante años?» (dilatación, hipertrofia, septo en D). Nada de eso está aquí.'},
+  {n:4,q:'¿De dónde viene?',title:'¿Cuál es el origen más probable de la HP?',keys:['ai','ee','ea','dd','siv','pp','masa','vm','ta','ie','ritmo'],
+   opts:['Precapilar: la paciente está remitida al programa de HP','Poscapilar (grupo 2): AI 46 mL/m², E/e’ 17, hipertrofia del VI, insuficiencia mitral y fibrilación auricular en una hipertensa diabética obesa','Enfermedad pulmonar (grupo 3) por la obesidad','Tromboembólica crónica: hay que pedir gammagrafía primero'],
+   ans:1,
+   why:'Todo apunta al corazón izquierdo: AI muy dilatada, E/e’ 17 con patrón grado II, hipertrofia concéntrica, mitral con anillo calcificado, FA. El fenotipo es insuficiencia cardíaca con FEVI preservada, la causa más frecuente de HP. La ausencia de muesca y el TA normal sugieren que el componente precapilar, si existe, es menor.',
+   pearl:'Antes de pensar en el pulmón, <b>mire la aurícula izquierda</b>. Una AI de 46 mL/m² con E/e’ de 17 es presión de llenado izquierda alta hasta que se demuestre lo contrario.',
+   facil:'Si alguien propone gammagrafía V/Q, recuérdele que se indica en HP precapilar confirmada o sospechada; aquí el primer paso es tratar la falla cardíaca. Un cateterismo solo si tras optimizar persiste HP desproporcionada o hay duda de componente combinado.'},
+  {n:5,q:'¿Cómo va? / Conducta',title:'¿Cuál es la conducta?',keys:['ai','ee','masa','vm','psap'],
+   opts:['Iniciar sildenafil o un antagonista de endotelina: la PSAP es de 57 mmHg','Tratar la insuficiencia cardíaca con FEVI preservada (diurético, iSGLT2, control de la presión arterial y de la FA, pérdida de peso) y reevaluar con eco en 3–6 meses; cateterismo solo si persiste HP desproporcionada','Cateterismo derecho urgente para iniciar terapia específica','Remitir a neumología por la obesidad'],
+   ans:1,
+   why:'En HP del grupo 2 los vasodilatadores pulmonares no están indicados y pueden provocar edema pulmonar. El tratamiento es el de la causa. Si al optimizar persiste HP con signos de componente precapilar (muesca, VD que se deteriora, PAPm desproporcionada), se estudia con cateterismo en el centro de HP.',
+   pearl:'El error más costoso en HP: <b>tratar un grupo 2 como grupo 1</b>. El informe del laboratorio, al decir solo «HP severa», facilitó ese error.',
+   facil:'Cierre preguntando qué frase debería haber escrito el laboratorio. Propuesta: «Probabilidad ecocardiográfica alta de HP, con hallazgos que sugieren origen poscapilar (AI dilatada, E/e’ 17, HVI); VD normal.»'}
+ ],
+ summary:{prob:'Alta',vd:'Normal · TAPSE/PSAP 0,33',origen:'Poscapilar (grupo 2)',conducta:'Tratar IC-FEp; sin vasodilatadores pulmonares'},
+ missing:['La conclusión abre con «HP severa» y relega la disfunción diastólica a una frase posterior, invirtiendo la jerarquía causal.','No orienta el origen pese a tener todos los datos para hacerlo.','No menciona la ausencia de signos de resistencia alta (sin muesca, TA normal, septo redondo), que es información relevante.']
+},
+{
+ id:'c4', chip:'4 · Baja probabilidad', title:'Hombre de 66 años con EPOC y disnea, remitido por «sospecha de HP»',
+ vignette:'EPOC GOLD 2 (VEF1 62 %), exfumador de 40 paquetes-año, disnea de esfuerzo progresiva en el último año. Neumología solicita eco «para descartar hipertensión pulmonar» antes de ajustar el tratamiento inhalado. Trae este informe.',
+ pt:{ini:'J.H.M.', edad:'66 años', sexo:'Masculino', sc:'1,78 m²', fecha:'Hace 1 mes', remite:'Neumología', ind:'EPOC. Disnea. Descartar hipertensión pulmonar.', ritmo:'Sinusal, 80 lpm', pa:'130/80 mmHg', ventana:'Subóptima (hiperinsuflación); mejor subcostal'},
+ prevLabel:null,
+ rows:[
+  {sec:'Ventrículo izquierdo', items:[
+   {k:'ddvi',l:'Diámetro diastólico VI',v:'46 mm',ref:'42–58'},
+   {k:'siv',l:'Septo interventricular',v:'10 mm',ref:'6–10'},
+   {k:'fevi',l:'FEVI (Simpson biplano)',v:'60 %',ref:'≥ 52'},
+   {k:'ie',l:'Índice de excentricidad VI',v:'1,0',ref:'≤ 1,1'}]},
+  {sec:'Función diastólica y aurícula izquierda', items:[
+   {k:'ea',l:'E / A',v:'0,9',ref:'0,8–2,0'},
+   {k:'ee',l:'E / e’ promedio',v:'9',ref:'< 14'},
+   {k:'ai',l:'Volumen AI indexado',v:'26 mL/m²',ref:'≤ 34'}]},
+  {sec:'Válvulas', items:[
+   {k:'vm',l:'Mitral',v:'Normal',ref:''},
+   {k:'va',l:'Aórtica',v:'Esclerosis leve, sin estenosis',ref:''},
+   {k:'vt',l:'Tricúspide',v:'Insuficiencia trivial',ref:''},
+   {k:'vp',l:'Pulmonar',v:'Insuficiencia trivial, no cuantificable',ref:''}]},
+  {sec:'Cavidades derechas', items:[
+   {k:'vdb',l:'Diámetro basal VD',v:'36 mm',ref:'≤ 41'},
+   {k:'vdvi',l:'Relación VD / VI basal',v:'0,8',ref:'< 1,0'},
+   {k:'plvd',l:'Pared libre VD',v:'4 mm',ref:'≤ 5'},
+   {k:'tapse',l:'TAPSE',v:'22 mm',ref:'≥ 17'},
+   {k:'sp',l:'S’ anillo tricúspide',v:'13 cm/s',ref:'≥ 9,5'},
+   {k:'fac',l:'FAC del VD',v:'44 %',ref:'≥ 35'},
+   {k:'ad',l:'Área AD telesistólica',v:'14 cm²',ref:'≤ 18'}]},
+  {sec:'Hemodinámica Doppler', items:[
+   {k:'trv',l:'Velocidad máx. insuficiencia tricuspídea',v:'2,5 m/s (señal débil, envolvente incompleta)',ref:'≤ 2,8'},
+   {k:'grad',l:'Gradiente VD–AD',v:'25 mmHg',ref:''},
+   {k:'vci',l:'VCI diámetro / colapso',v:'17 mm · > 50 %',ref:'≤ 21 · > 50 %'},
+   {k:'pad',l:'PAD estimada',v:'3 mmHg',ref:'3'},
+   {k:'psap',l:'PSAP estimada',v:'28 mmHg',ref:'< 36'},
+   {k:'ip',l:'Vel. protodiastólica insuf. pulmonar',v:'No valorable',ref:'≤ 2,2'},
+   {k:'ta',l:'Tiempo de aceleración TSVD',v:'125 ms, sin muesca',ref:'≥ 105'},
+   {k:'ap',l:'Diámetro tronco pulmonar',v:'23 mm',ref:'≤ 25'}]},
+  {sec:'Pericardio', items:[
+   {k:'peri',l:'Derrame pericárdico',v:'Ausente',ref:'Ausente'}]}
+ ],
+ conclusion:'Estudio dentro de límites normales para la edad. Ventana acústica subóptima. Presión sistólica pulmonar estimada normal. Esclerosis aórtica sin estenosis.',
+ steps:[
+  {n:1,q:'¿Hay presión alta?',title:'La velocidad de IT es 2,5 m/s con señal débil. ¿Qué peso le da?',keys:['trv','grad','vci','pad','psap','ventana'],
+   opts:['Ninguno: con señal débil hay que repetir el eco con contraste antes de concluir','Es un dato de baja calidad, pero una envolvente incompleta subestima, no sobreestima, y el resto del informe (VD, AD, VCI, TSVD) es normal: la presión probablemente no está alta','La PSAP de 28 es normal y eso cierra el tema','En EPOC la IT no se puede usar porque la hiperinsuflación la distorsiona'],
+   ans:1,
+   why:'Una envolvente incompleta tiende a dar velocidades menores que la real, así que 2,5 m/s podría ser algo mayor, pero el resto de la sistemática es tranquilizador: VD de 36 mm con pared de 4 mm, TAPSE 22, AD 14 cm², VCI 17 mm con colapso, TA 125 ms sin muesca. La presión pulmonar no se estima con una sola fila del informe.',
+   pearl:'La guía 2022 equipara <b>«VIT no medible» con VIT ≤ 2,8</b>: la probabilidad se asigna con los signos adicionales. Una señal débil no deja el informe en blanco.',
+   facil:'Aproveche para mostrar en el equipo qué es una envolvente incompleta. Si alguien insiste en repetir con contraste salino, es razonable, pero no cambia la conducta inmediata si el VD es normal.'},
+  {n:2,q:'¿Qué probabilidad?',title:'¿Qué probabilidad ecocardiográfica de HP tiene este paciente?',keys:['trv','vdvi','ie','ta','ap','vci','ad','plvd'],
+   opts:['Intermedia: tiene EPOC y la ventana es subóptima','Baja: VIT ≤ 2,8 m/s sin signos de ninguna de las tres categorías','No se puede asignar con ventana subóptima','Alta: la disnea es desproporcionada para un GOLD 2'],
+   ans:1,
+   why:'VIT ≤ 2,8 (o no medible) sin signos adicionales es probabilidad baja. La calidad de la ventana afecta la confianza, pero el informe logró medir lo esencial por vía subcostal. La disnea desproporcionada es un dato clínico que justifica buscar otras causas, no cambiar la categoría ecocardiográfica.',
+   pearl:'En enfermedad pulmonar la precisión del eco es menor, pero <b>un VD normal con VCI normal</b> hace muy improbable una HP que explique los síntomas.',
+   facil:'Pregunte: ¿qué habría cambiado la categoría? Respuesta: dos signos de categorías distintas (p. ej., VD/VI > 1 y VCI dilatada) con la misma VIT → intermedia.'},
+  {n:3,q:'¿Cómo está el VD?',title:'¿Cómo describe el ventrículo derecho?',keys:['vdb','plvd','tapse','sp','fac','ad','peri'],
+   opts:['Normal en tamaño, grosor y función; sin signos de sobrecarga crónica','Hipertrófico leve por la EPOC','No valorable por la ventana','Dilatado: relación VD/VI de 0,8 es alta para su edad'],
+   ans:0,
+   why:'VD 36 mm, pared 4 mm, TAPSE 22, S’ 13, FAC 44 %, AD 14 cm². Un VD que no se ha adaptado (sin hipertrofia ni dilatación) es el argumento más fuerte contra una HP crónica significativa, más que la propia PSAP.',
+   pearl:'Cuando la medida de presión es dudosa, <b>el VD es el testigo</b>: la hipertensión pulmonar crónica deja huella en su tamaño y grosor.',
+   facil:'Contraste con el caso 1: misma pregunta, VD opuesto. Es útil poner los dos informes lado a lado si proyecta en dos pantallas.'},
+  {n:4,q:'¿De dónde viene?',title:'Si no es HP, ¿qué pistas sobre la disnea ofrece este eco?',keys:['fevi','ee','ai','ea','va','vm'],
+   opts:['Ninguna: el eco es normal y la disnea es pulmonar por definición','Descarta las causas cardíacas frecuentes (disfunción sistólica, presiones de llenado altas, valvulopatía significativa), lo que orienta a causa respiratoria, desacondicionamiento u otra extracardíaca','La esclerosis aórtica explica la disnea','El E/e’ de 9 indica disfunción diastólica incipiente'],
+   ans:1,
+   why:'Un eco normal no es un eco inútil: en este paciente descarta falla cardíaca con FEVI preservada (AI 26, E/e’ 9), valvulopatía y disfunción del VI. El estudio de la disnea sigue por el lado respiratorio: pruebas completas con DLCO, caminata de 6 minutos con oximetría, y considerar ergoespirometría si persiste la duda.',
+   pearl:'Un informe «dentro de límites normales» responde preguntas si se lee con la sistemática: <b>qué descarta</b> es tan importante como qué encuentra.',
+   facil:'Si el grupo es de neumología, conecte con DLCO desproporcionadamente baja como señal de alarma para HP del grupo 3 y para repetir el eco.'},
+  {n:5,q:'¿Cómo va? / Conducta',title:'¿Cuál es la conducta?',keys:['trv','psap','vdb','ad','vci'],
+   opts:['Cateterismo derecho: la clínica es sugestiva aunque el eco sea normal','No requiere estudio adicional de HP por ahora: optimizar EPOC, completar estudio de la disnea; repetir el eco si aparecen hipoxemia desproporcionada, DLCO baja o progresión clínica','Repetir el eco con contraste salino en un mes antes de cualquier decisión','Iniciar oxígeno domiciliario'],
+   ans:1,
+   why:'Probabilidad baja sin factores de riesgo específicos para HAP no justifica cateterismo. El seguimiento ecocardiográfico se indica si cambia la clínica o aparecen señales de alarma. Repetir con contraste es opcional y no debe retrasar el manejo de la EPOC.',
+   pearl:'La sistemática también sirve para <b>no sobreestudiar</b>: un paciente con probabilidad baja y VD normal no va a hemodinamia.',
+   facil:'Termine el bloque de casos comparando las cuatro conclusiones de laboratorio: dos eran engañosas (casos 1 y 3), una omitió lo importante (caso 2) y una era correcta pero incompleta (caso 4).'}
+ ],
+ summary:{prob:'Baja',vd:'Normal · TAPSE/PSAP 0,79',origen:'Sin causa cardíaca de la disnea',conducta:'Sin cateterismo; estudiar la disnea por otra vía'},
+ missing:['No explicita la probabilidad ecocardiográfica de HP, que es la pregunta de la remisión.','No aclara qué medidas se obtuvieron por vía subcostal y con qué confianza.','No comenta la calidad de la señal de IT en la conclusión, solo en la tabla.']
+}
+];
+
+/* ===== Estado ===== */
+const state={ci:0, step:0, answers:{}, facil:false};
+try{const s=JSON.parse(localStorage.getItem('ecohp-state')||'null'); if(s&&typeof s.ci==='number'){Object.assign(state,s)} }catch(e){}
+try{ if(localStorage.getItem('ecohp-big')==='1') document.documentElement.classList.add('big'); }catch(e){}
+function save(){try{localStorage.setItem('ecohp-state',JSON.stringify({ci:state.ci,step:state.step,answers:state.answers,facil:state.facil}))}catch(e){}}
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ===== Render ===== */
+function renderCaseNav(){
+  $('#caseNav').innerHTML=CASES.map((c,i)=>`<button class="case-btn" data-i="${i}" aria-pressed="${i===state.ci}">${esc(c.chip)}</button>`).join('');
+}
+function renderReport(){
+  const c=CASES[state.ci]; const hasPrev=!!c.prevLabel;
+  const step=c.steps[state.step-1]; const keys=new Set(step?step.keys:[]);
+  const id=c.pt;
+  let h=`<span class="stamp">Caso docente · datos ficticios</span>
+  <div class="report-head"><div class="lab">Laboratorio de Ecocardiografía</div><div class="sub">Informe de ecocardiograma transtorácico bidimensional, Doppler color, pulsado, continuo y tisular</div></div>
+  <div class="idgrid">
+   <div><span>Paciente: </span>${esc(id.ini)}</div><div><span>Edad: </span>${esc(id.edad)}</div><div><span>Sexo: </span>${esc(id.sexo)}</div><div><span>SC: </span>${esc(id.sc)}</div>
+   <div><span>Fecha: </span>${esc(id.fecha)}</div><div><span>Remite: </span>${esc(id.remite)}</div><div class="${keys.has('ritmo')?'hlid':''}"><span>Ritmo / FC: </span>${esc(id.ritmo)}</div><div><span>PA: </span>${esc(id.pa)}</div>
+   <div style="grid-column:1/-1"><span>Indicación: </span>${esc(id.ind)}</div>
+   <div style="grid-column:1/-1" class="${keys.has('ventana')?'hlid':''}"><span>Calidad de ventana: </span>${esc(id.ventana)}</div>
+  </div>`;
+  for(const sec of c.rows){
+    h+=`<div class="rsec"><h3>${esc(sec.sec)}</h3><table class="rt">`;
+    if(hasPrev) h+=`<tr class="colh"><td>Parámetro</td><td>Actual</td><td>${esc(c.prevLabel)}</td><td>Ref.</td></tr>`;
+    for(const r of sec.items){
+      h+=`<tr data-k="${r.k}" class="${keys.has(r.k)?'hl':''}"><td>${esc(r.l)}</td><td class="v">${esc(r.v)}</td>${hasPrev?`<td class="prev">${esc(r.p||'—')}</td>`:''}<td class="ref">${esc(r.ref||'')}</td></tr>`;
+    }
+    h+=`</table></div>`;
+  }
+  const concHl = state.step===0 || state.step>c.steps.length;
+  h+=`<div class="concl ${concHl?'hl':''}"><h3>Conclusión</h3><p>${esc(c.conclusion)}</p></div>
+  <div class="sign"><span>Realizó: médico ecocardiografista · Firma digital</span><span>Equipo: ecógrafo con sonda sectorial 1–5 MHz</span></div>`;
+  $('#report').innerHTML=h;
+  document.querySelectorAll('.hlid').forEach(el=>{el.style.background='var(--gold-soft)';el.style.boxShadow='inset 3px 0 0 var(--gold)';el.style.paddingLeft='.4rem'});
+}
+function renderVignette(){
+  const c=CASES[state.ci];
+  $('#vignette').innerHTML=`<span class="eyebrow">Caso ${state.ci+1} de ${CASES.length}</span><h2>${esc(c.title)}</h2><p>${esc(c.vignette)}</p>`;
+}
+function renderStepNav(){
+  const c=CASES[state.ci]; const a=state.answers[c.id]||{};
+  const total=c.steps.length+2;
+  let h=`<button data-s="0" aria-current="${state.step===0?'step':'false'}">Informe</button>`;
+  c.steps.forEach((s,i)=>{const done=a[i]!==undefined; const wrong=done&&a[i]!==s.ans;
+    h+=`<button data-s="${i+1}" class="${done?'done':''} ${wrong?'wrong':''}" aria-current="${state.step===i+1?'step':'false'}">${s.n}</button>`});
+  h+=`<button data-s="${c.steps.length+1}" aria-current="${state.step===c.steps.length+1?'step':'false'}">Síntesis</button>`;
+  $('#stepNav').innerHTML=h;
+  $('#prog').style.width=Math.round(state.step/(total-1)*100)+'%';
+}
+function renderStep(){
+  const c=CASES[state.ci]; const a=state.answers[c.id]||{}; const card=$('#stepCard');
+  if(state.step===0){
+    card.innerHTML=`<span class="eyebrow">Paso 0</span><h2>Lea el informe como llegó a su consulta</h2>
+    <p class="lead">Tómese un minuto. Antes de responder nada, ubique en el informe los datos que necesita para las cinco preguntas y fíjese en cómo redactó la conclusión el laboratorio.</p>
+    <div class="pearl"><b>Las cinco preguntas, siempre en este orden:</b> ¿Hay presión alta? · ¿Qué probabilidad? · ¿Cómo está el VD? · ¿De dónde viene? · ¿Cómo va y qué hago?</div>
+    ${state.facil?`<div class="facil"><div class="lbl">Para el facilitador</div>Pregunte al grupo, antes de avanzar: «¿Con qué frase se quedaría de esta conclusión?». Anote las respuestas; al final del caso se contrastan con la síntesis.</div>`:''}
+    <div class="actions"><span class="note">Use las flechas ← → del teclado para avanzar.</span><button class="btn" data-go="1">Empezar con la pregunta 1</button></div>`;
+    return;
+  }
+  if(state.step>c.steps.length){
+    const n=c.steps.length; const hits=c.steps.filter((s,i)=>a[i]===s.ans).length;
+    card.innerHTML=`<span class="eyebrow">Síntesis</span><h2>Lo que el informe decía, leído con la sistemática</h2>
+    <div class="sum">
+      <div class="tile"><span class="l">Probabilidad</span><span class="v">${esc(c.summary.prob)}</span></div>
+      <div class="tile"><span class="l">Ventrículo derecho</span><span class="v">${esc(c.summary.vd)}</span></div>
+      <div class="tile"><span class="l">Origen</span><span class="v">${esc(c.summary.origen)}</span></div>
+      <div class="tile"><span class="l">Conducta</span><span class="v">${esc(c.summary.conducta)}</span></div>
+    </div>
+    <div class="missing"><h3>Lo que el informe no dijo (y debió decir)</h3><ul>${c.missing.map(m=>`<li>${esc(m)}</li>`).join('')}</ul></div>
+    <div class="actions"><span class="score">Aciertos: ${hits} / ${n}</span>
+      <span style="display:flex;gap:.5rem;flex-wrap:wrap"><button class="btn ghost" data-reset="1">Reiniciar caso</button>${state.ci<CASES.length-1?`<button class="btn" data-next-case="1">Siguiente caso</button>`:`<button class="btn" data-case="0">Volver al caso 1</button>`}</span></div>`;
+    return;
+  }
+  const i=state.step-1, s=c.steps[i], chosen=a[i];
+  const answered=chosen!==undefined;
+  const letters='ABCD';
+  card.innerHTML=`<span class="eyebrow"><b>${s.n}</b> ${esc(s.q)}</span><h2>${esc(s.title)}</h2>
+  <div class="where"><span class="tag">En el informe</span><span>Las filas resaltadas en dorado contienen los datos para responder.</span></div>
+  <div class="opts">${s.opts.map((o,j)=>{
+     let cls='opt'; if(answered){ if(j===s.ans) cls+=' correct'; else if(j===chosen) cls+=' wrong'; } else if(state.facil&&j===s.ans) cls+=' reveal';
+     return `<button class="${cls}" data-opt="${j}" ${answered?'disabled':''}><span class="k">${letters[j]}</span><span>${esc(o)}</span></button>`}).join('')}</div>
+  ${answered?`<div class="fb ${chosen===s.ans?'ok':'bad'}"><span class="verdict">${chosen===s.ans?'Correcto.':'No es la mejor opción. La respuesta es '+letters[s.ans]+'.'}</span><p>${esc(s.why)}</p></div>
+  <div class="pearl">${s.pearl}</div>`:''}
+  ${state.facil?`<div class="facil"><div class="lbl">Para el facilitador</div>${esc(s.facil)}</div>`:''}
+  <div class="actions"><button class="btn ghost" data-go="${state.step-1}">Anterior</button>${answered||state.facil?`<button class="btn" data-go="${state.step+1}">${state.step===c.steps.length?'Ver síntesis':'Siguiente pregunta'}</button>`:`<span class="note">Elija una opción para ver la explicación.</span>`}</div>`;
+}
+function renderAll(){renderCaseNav();renderVignette();renderStepNav();renderReport();renderStep();save();}
+function go(n){const c=CASES[state.ci]; state.step=Math.max(0,Math.min(c.steps.length+1,n)); renderStepNav(); renderReport(); renderStep(); save(); $('#stepCard').scrollIntoView({block:'nearest'});}
+function setCase(i){state.ci=i; state.step=0; renderAll(); window.scrollTo({top:0});}
+
+/* ===== Eventos ===== */
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  if(b.dataset.i!==undefined){setCase(+b.dataset.i);return}
+  if(b.dataset.case!==undefined){setCase(+b.dataset.case);return}
+  if(b.dataset.nextCase){setCase(state.ci+1);return}
+  if(b.dataset.s!==undefined){go(+b.dataset.s);return}
+  if(b.dataset.go!==undefined){go(+b.dataset.go);return}
+  if(b.dataset.opt!==undefined){const c=CASES[state.ci]; state.answers[c.id]=state.answers[c.id]||{}; state.answers[c.id][state.step-1]=+b.dataset.opt; renderStepNav(); renderStep(); save(); return}
+  if(b.dataset.reset){const c=CASES[state.ci]; delete state.answers[c.id]; go(0); return}
+  if(b.id==='facilBtn'){state.facil=!state.facil; b.setAttribute('aria-pressed',state.facil); renderStep(); save(); return}
+  if(b.id==='bigBtn'){const on=document.documentElement.classList.toggle('big'); b.setAttribute('aria-pressed',on); try{localStorage.setItem('ecohp-big',on?'1':'0')}catch(e){} return}
+});
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+  if(e.key==='ArrowRight'){go(state.step+1)} else if(e.key==='ArrowLeft'){go(state.step-1)}
+});
+$('#facilBtn').setAttribute('aria-pressed',state.facil);
+$('#bigBtn').setAttribute('aria-pressed',document.documentElement.classList.contains('big'));
+renderAll();
+</script>
+
+</body>
+</html>
